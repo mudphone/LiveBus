@@ -8,6 +8,9 @@
 // Waipahu 21.3867° N, 158.0092° W
 // Meteor.call('createUpdateVehicle', { vehicleId: "456", lastUpdate: Date.now(), latitude: 21.3867, longitude: -158.0092 })
 
+// Wahiawa 21.5028° N, 158.0236° W
+// Meteor.call('createUpdateVehicle', { vehicleId: "789", lastUpdate: Date.now(), latitude: 21.5028, longitude: -158.0236 })
+
 // server: publish all room documents
 Meteor.publish("vehicles", function () {
   return Vehicles.find(); // everything
