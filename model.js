@@ -46,7 +46,11 @@ updateVehicle = function (options) {
   if (options.vehicleId.length > 10)
     throw new Meteor.Error(413, "Vehicle ID too long");
 
-  if (Vehicles.find({vehicleId:options.vehicleId}).count() > 0) {
+  var matchingVehicle = Vehicles.findOne({vehicleId:options.vehicleId});
+  if (_U.existy(matchingVehicle)) {
+    if (parseInt(matchingVehicle.latitude) === parseInt(options.latitude) &&
+        parseInt(matchingVehicle.longitude) === parseInt(options.longitude)) return;
+
     return Vehicles.update(
       {vehicleId: options.vehicleId},
       {$set: {lastUpdate: options.lastUpdate,

@@ -7,16 +7,41 @@ var width  = 1600,
 // Subscribe to 'lists' collection on startup.
 // Select a list once data has arrived.
 var vehiclesHandle = Meteor.subscribe('vehicles', function () {
-  // var handle = Vehicles.find({}).observeChanges({
-  //   added: function(id, fields) {
-  //     console.log('added vehicles: id: ' + id);
-  //     console.log(fields);
-  //   },
-  //   changed: function (id, fields) {
-  //     console.log('changed vehicles: id: ' + id);
-  //     console.log(fields);      
-  //   }
-  // });
+  var svg = d3.select("svg");
+  var projection = d3.geo.albers()
+    .center([0, 21.4667])
+    .rotate([157.9, 0])
+    .parallels([15, 25])
+    .scale(130000)
+    .translate([width / 2, height / 2]);
+
+  var handle = Vehicles.find({}).observeChanges({
+    // added: function(id, fields) {
+    //   // console.log('added vehicles: id: ' + id);
+    //   // console.log(fields);
+    // },
+    changed: function (id, fields) {
+      console.log('changed vehicles: id: ' + id);
+      console.log(fields);      
+
+      var vehicle = Vehicles.findOne({_id:id});
+      if (!_U.existy(vehicle)) return;
+
+      var circle = svg.select("#v"+vehicle.vehicleId);
+      console.log('moving ' + circle.length + ' circles');
+      circle
+        .style("fill", "green")
+        .style("opacity", 1.0)
+        .transition()
+          .duration(5000)
+          .attr("transform", function(d) {return "translate(" + projection([d.longitude,d.latitude]) + ")";})
+          .attr("r", 6)
+        .transition()
+          .duration(2000)
+          .attr("r", 3)
+          .style("fill", "white");
+    }
+  });
 });
 
 
@@ -55,21 +80,34 @@ Template.map.rendered = function () {
     circles
       .enter()
         .append("circle")
+          .attr("id", function(d) {return "v" + d.vehicleId;})
           .attr("transform", function(d) {return "translate(" + projection([d.longitude,d.latitude]) + ")";})
-          .attr("r",0)
+          .attr("r", 100)
+          .style("opacity", 0)
+        .transition()
+          .duration(2000)
+          .attr("r", 3)
+          .style("opacity", 0.2);
 
     // Transition entering/updating vehicles
-    circles
-      .transition()
-        .attr("transform", function(d) {return "translate(" + projection([d.longitude,d.latitude]) + ")";})
-        .attr("r",20);
+    // circles
+    //   .transition()
+    //     .duration(5000)
+    //     .style("fill", "green")
+    //     .attr("transform", function(d) {return "translate(" + projection([d.longitude,d.latitude]) + ")";})
+    //     .attr("r", 20)
+    //   .transition()
+    //     .duration(2000)
+    //     .attr("r", 5)
+    //     .style("fill", "white");
 
     // Exititing vehicles
     circles
       .exit()
       .transition()
-        .duration(2000)
-        .attr("r", 0)
+        .duration(4000)
+        .attr("r", 100)
+        .style("opacity", 0)
         .remove();
   });
 
