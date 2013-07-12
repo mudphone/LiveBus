@@ -32,35 +32,39 @@ var Coordinate = Match.Where(function (x) {
 
 var UnixTimestamp = Match.Where(function (x) {
   check(x, Number);
-  return x > 1373529887583;
+  return x > 1302223652000;
 });
+
+updateVehicle = function (options) {
+  check(options, {
+    vehicleId: NonEmptyString,
+    lastUpdate: UnixTimestamp,
+    latitude: Coordinate,
+    longitude: Coordinate
+  });
+
+  if (options.vehicleId.length > 10)
+    throw new Meteor.Error(413, "Vehicle ID too long");
+
+  if (Vehicles.find({vehicleId:options.vehicleId}).count() > 0) {
+    return Vehicles.update(
+      {vehicleId: options.vehicleId},
+      {$set: {lastUpdate: options.lastUpdate,
+              latitude: options.latitude,
+              longitude: options.longitude}});
+  } else {
+    return Vehicles.insert({
+      vehicleId: options.vehicleId,
+      lastUpdate: options.lastUpdate,
+      latitude: options.latitude,
+      longitude: options.longitude
+    });
+  }
+};
 
 Meteor.methods({
   // options should include: title, description, x, y, public
   createUpdateVehicle: function (options) {
-    check(options, {
-      vehicleId: NonEmptyString,
-      lastUpdate: UnixTimestamp,
-      latitude: Coordinate,
-      longitude: Coordinate
-    });
-
-    if (options.vehicleId.length > 10)
-      throw new Meteor.Error(413, "Vehicle ID too long");
-
-    if (Vehicles.find({vehicleId:options.vehicleId}).count() > 0) {
-      return Vehicles.update(
-        {vehicleId: options.vehicleId},
-        {$set: {lastUpdate: options.lastUpdate,
-                latitude: options.latitude,
-                longitude: options.longitude}});
-    } else {
-      return Vehicles.insert({
-        vehicleId: options.vehicleId,
-        lastUpdate: options.lastUpdate,
-        latitude: options.latitude,
-        longitude: options.longitude
-      });
-    }
+    updateVehicle(options);
   },
 });

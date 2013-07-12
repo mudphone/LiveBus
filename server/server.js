@@ -13,9 +13,33 @@ if (_U.existy(builder)) {
 }
 
 var http = Npm.require('http');
+var Fiber = Npm.require('fibers');
+var GTFS_VEHICLE_BATCH_SIZE = 10;
+var GTFS_VEHICLE_POLL_SECONDS = 10;
 
-Meteor.startup(function () {
+function gtfsRecorder() {
+  var offset = 0;
+  return function (msg) {
+    var batch = _.first(_.rest(msg.entity, offset), GTFS_VEHICLE_BATCH_SIZE);
+    _.each(batch, function(entity) {
+      Fiber(function() {
+        var opts = {
+          vehicleId: entity.vehicle.vehicle.id,
+          lastUpdate: entity.vehicle.timestamp.low * 1000,
+          longitude: entity.vehicle.position.longitude,
+          latitude: entity.vehicle.position.latitude
+        };
+        updateVehicle(opts);
+      }).run();
+    });
+    offset += GTFS_VEHICLE_BATCH_SIZE;
+    if (offset > msg.entity.length-1) offset = 0;
+    console.log('next batch starts at: ' + offset + '/' + msg.entity.length);
+  }
+}
 
+var recorder = gtfsRecorder();
+function pollGTFS() {
   var options = {
     hostname: 'webapps.thebus.org',
     port: 80,
@@ -39,10 +63,14 @@ Meteor.startup(function () {
       var GTFSRealTime = builder.build("transit_realtime");
       var decoder = GTFSRealTime.FeedMessage;
       var buff = new Buffer(buffer, "base64");
-      console.log("Buffer.isBuffer: " + Buffer.isBuffer(buff));
-      var msg = decoder.decode(buff);
-      // console.log(msg);
-      console.log(msg.entity[0].vehicle);
+      try{
+        var msg = decoder.decode(buff);
+        recorder(msg);
+      }
+      catch(e){
+        console.log('error on decode or record ->');
+        console.log(e);
+      }
     });
   });
 
@@ -52,6 +80,13 @@ Meteor.startup(function () {
 
   // write data to request body
   req.end();
+}
+
+Meteor.startup(function () {
+  pollGTFS();
+  setInterval(function(){
+    pollGTFS();
+  }, GTFS_VEHICLE_POLL_SECONDS*1000);
 });
 
 
