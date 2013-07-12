@@ -43,6 +43,6 @@ body {
   stroke-width: 1px;
 }
 
-.map circle {
+.map circle.vehicle {
   fill: white;
 }

@@ -4,6 +4,8 @@
 var width  = 1600,
     height = 1160;
 
+var CSS_VEH_OPACITY = 0.5;
+
 // Subscribe to 'lists' collection on startup.
 // Select a list once data has arrived.
 var vehiclesHandle = Meteor.subscribe('vehicles', function () {
@@ -34,12 +36,29 @@ var vehiclesHandle = Meteor.subscribe('vehicles', function () {
         .style("opacity", 1.0)
         .transition()
           .duration(5000)
-          .attr("transform", function(d) {return "translate(" + projection([d.longitude,d.latitude]) + ")";})
+          .attr("transform", function(d) {return "translate(" + projection([fields.longitude,fields.latitude]) + ")";})
           .attr("r", 6)
         .transition()
           .duration(2000)
           .attr("r", 3)
-          .style("fill", "white");
+          .style("fill", "white")
+          .style("opacity", CSS_VEH_OPACITY);
+      
+      svg
+        .append("circle")
+          .attr("class", "halo")
+          .attr("stroke", "white")
+          .attr("r", 100)
+          .style("fill-opacity", 0)
+          .attr("transform", function(d) {return "translate(" + projection([fields.longitude,fields.latitude]) + ")";})
+          .transition()
+            .duration(1000)
+            .attr("r", 10)
+          .transition()
+            .delay(7000)
+            .duration(2000)
+            .style("opacity", 0)
+            .remove();
     }
   });
 });
@@ -73,13 +92,14 @@ Template.map.rendered = function () {
 
   Deps.autorun(function () {
     // Data join
-    var circles = svg.selectAll("circle")
+    var circles = svg.selectAll("circle.vehicle")
       .data(Vehicles.find().fetch(), function (vehicle) { return vehicle._id; });
 
     // Entering vehicles
     circles
       .enter()
         .append("circle")
+          .attr("class", "vehicle")
           .attr("id", function(d) {return "v" + d.vehicleId;})
           .attr("transform", function(d) {return "translate(" + projection([d.longitude,d.latitude]) + ")";})
           .attr("r", 100)
@@ -87,7 +107,7 @@ Template.map.rendered = function () {
         .transition()
           .duration(2000)
           .attr("r", 3)
-          .style("opacity", 0.2);
+          .style("opacity", CSS_VEH_OPACITY);
 
     // Transition entering/updating vehicles
     // circles
