@@ -5,18 +5,12 @@ var width  = 1600,
     height = 1160;
 
 var CSS_VEH_OPACITY = 0.5;
+var CSS_VEH_RADIUS = 3;
+var CSS_VEH_COLOR = "white";
 
 // Subscribe to 'lists' collection on startup.
 // Select a list once data has arrived.
 var vehiclesHandle = Meteor.subscribe('vehicles', function () {
-  var movedCount = 0;
-  var svg = d3.select("svg");
-  var projection = d3.geo.albers()
-    .center([0, 21.4667])
-    .rotate([157.9, 0])
-    .parallels([15, 25])
-    .scale(130000)
-    .translate([width / 2, height / 2]);
 
   var handle = Vehicles.find({}).observeChanges({
     // added: function(id, fields) {
@@ -29,39 +23,24 @@ var vehiclesHandle = Meteor.subscribe('vehicles', function () {
 
       var vehicle = Vehicles.findOne({_id:id});
       if (!_U.existy(vehicle)) return;
-      movedCount += 1;
-      console.log('moving vehicle (so far ' + movedCount + ') ->');
+      // movedCount += 1;
+      console.log('moving vehicle ->');
       console.log(vehicle);
-
-      var circle = svg.select("#v"+vehicle.vehicleId);
-      circle
-        .style("fill", "green")
-        .style("opacity", 1.0)
-        .transition()
-          .duration(5000)
-          .attr("transform", function(d) {return "translate(" + projection([fields.longitude,fields.latitude]) + ")";})
-          .attr("r", 6)
-        .transition()
-          .duration(2000)
-          .attr("r", 3)
-          .style("fill", "white")
-          .style("opacity", CSS_VEH_OPACITY);
-      
-      svg
-        .append("circle")
-          .attr("class", "halo")
-          .attr("stroke", "white")
-          .attr("r", 100)
-          .style("fill-opacity", 0)
-          .attr("transform", function(d) {return "translate(" + projection([fields.longitude,fields.latitude]) + ")";})
-          .transition()
-            .duration(1000)
-            .attr("r", 10)
-          .transition()
-            .delay(7000)
-            .duration(2000)
-            .style("opacity", 0)
-            .remove();
+      // svg
+      //   .append("circle")
+      //     .attr("class", "halo")
+      //     .attr("stroke", "white")
+      //     .attr("r", 100)
+      //     .style("fill-opacity", 0)
+      //     .attr("transform", function(d) {return "translate(" + projection([fields.longitude,fields.latitude]) + ")";})
+      //     .transition()
+      //       .duration(1000)
+      //       .attr("r", 10)
+      //     .transition()
+      //       .delay(7000)
+      //       .duration(2000)
+      //       .style("opacity", 0)
+      //       .remove();
     }
   });
 });
@@ -69,6 +48,18 @@ var vehiclesHandle = Meteor.subscribe('vehicles', function () {
 
 ///////////////////////////////////////////////////////////////////////////////
 // Map display
+var previousData = [];
+
+function previousCoordinates(vehicle) {
+  var vehicle = Vehicles.findOne({vehicleId:vehicle.vehicleId});
+  if (_U.existy(vehicle)) return {latitude:vehicle.latitude, longitude:vehicle.longitude};
+  return undefined;
+}
+
+function hasMoved(vehicle) {
+  var oldCoords = previousCoordinates(vehicle);
+  return _U.existy(oldCoords) && !(oldCoords.latitude === vehicle.latitude && oldCoords.longitude === vehicle.longitude);
+}
 
 Template.map.rendered = function () {
   var self = this;
@@ -94,9 +85,26 @@ Template.map.rendered = function () {
     .translate([width / 2, height / 2]);
 
   Deps.autorun(function () {
+    console.log('Refreshing data...');
     // Data join
     var circles = svg.selectAll("circle.vehicle")
       .data(Vehicles.find().fetch(), function (vehicle) { return vehicle._id; });
+    
+    // Transition entering/updating vehicles
+    circles
+      .style("fill", function(d) {
+        return hasMoved(d) ? "green" : CSS_VEH_COLOR;
+      })
+      .transition()
+        .duration(5000)
+        .attr("transform", function(d) {return "translate(" + projection([d.longitude,d.latitude]) + ")";})
+        .attr("r", function(d) {
+          return hasMoved(d) ? 20 : CSS_VEH_RADIUS;
+        })
+      .transition()
+        .duration(2000)
+        .attr("r", CSS_VEH_RADIUS)
+        .style("fill", CSS_VEH_COLOR);
 
     // Entering vehicles
     circles
@@ -109,29 +117,21 @@ Template.map.rendered = function () {
           .style("opacity", 0)
         .transition()
           .duration(2000)
-          .attr("r", 3)
+          .attr("r", CSS_VEH_RADIUS)
           .style("opacity", CSS_VEH_OPACITY);
 
-    // Transition entering/updating vehicles
-    // circles
-    //   .transition()
-    //     .duration(5000)
-    //     .style("fill", "green")
-    //     .attr("transform", function(d) {return "translate(" + projection([d.longitude,d.latitude]) + ")";})
-    //     .attr("r", 20)
-    //   .transition()
-    //     .duration(2000)
-    //     .attr("r", 5)
-    //     .style("fill", "white");
 
     // Exititing vehicles
     circles
       .exit()
       .transition()
-        .duration(4000)
+        .duration(10000)
         .attr("r", 100)
         .style("opacity", 0)
         .remove();
+
+    // Record old data:
+    previousData = Vehicles.find({}).fetch();
   });
 
   // Draw routes
