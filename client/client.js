@@ -6,6 +6,8 @@ var width  = 1600,
 
 var CSS_VEH_OPACITY = 0.5;
 var CSS_VEH_RADIUS = 3;
+var CSS_VEH_RADIUS_MOVING = 6;
+var CSS_VEH_MOVING_DURATION_SEC = 5;
 var CSS_VEH_COLOR = "white";
 
 // Subscribe to 'lists' collection on startup.
@@ -86,24 +88,60 @@ Template.map.rendered = function () {
 
   Deps.autorun(function () {
     console.log('Refreshing data...');
+    var vehicles = Vehicles.find().fetch();
+
     // Data join
     var circles = svg.selectAll("circle.vehicle")
-      .data(Vehicles.find().fetch(), function (vehicle) { return vehicle._id; });
+      .data(vehicles, function (vehicle) { return vehicle._id; });
     
+    // HALOS
+    var halos = svg.selectAll("circle.halo")
+      .data(vehicles, function (vehicle) { return vehicle._id; });
+
+    halos
+      .enter()
+        .append("circle")
+          .attr("class", "halo")
+          .attr("stroke", "white")
+          .attr("r", 100)
+          .style("fill-opacity", 0)
+          .style("opacity", 0)
+          .attr("transform", function(d) {return "translate(" + projection([d.longitude,d.latitude]) + ")";});
+    halos
+      .attr("transform", function(d) {
+          var oldCoords = previousCoordinates(d);
+          if (!_U.existy(oldCoords)) oldCoords = d;
+          return "translate(" + projection([oldCoords.longitude,oldCoords.latitude]) + ")";
+        })
+      .style("opacity", function(d) {
+          return hasMoved(d) ? 1 : 0;
+        })
+      .attr("r", 20)
+      .transition()
+        .duration(CSS_VEH_MOVING_DURATION_SEC*1000.0)
+        .attr("transform", function(d) {return "translate(" + projection([d.longitude,d.latitude]) + ")";})
+        .attr("r", 10)
+      .transition()
+        .delay(5000)
+        .duration(2000)
+        .style("opacity", 0);
+
     // Transition entering/updating vehicles
     circles
       .style("fill", function(d) {
         return hasMoved(d) ? "green" : CSS_VEH_COLOR;
       })
       .transition()
-        .duration(5000)
+        .duration(CSS_VEH_MOVING_DURATION_SEC*1000.0)
+        .style("opacity", 1)
         .attr("transform", function(d) {return "translate(" + projection([d.longitude,d.latitude]) + ")";})
         .attr("r", function(d) {
-          return hasMoved(d) ? 20 : CSS_VEH_RADIUS;
+          return hasMoved(d) ? CSS_VEH_RADIUS_MOVING : CSS_VEH_RADIUS;
         })
       .transition()
         .duration(2000)
         .attr("r", CSS_VEH_RADIUS)
+        .style("opacity", CSS_VEH_OPACITY)
         .style("fill", CSS_VEH_COLOR);
 
     // Entering vehicles
@@ -131,7 +169,7 @@ Template.map.rendered = function () {
         .remove();
 
     // Record old data:
-    previousData = Vehicles.find({}).fetch();
+    previousData = vehicles;
   });
 
   // Draw routes
