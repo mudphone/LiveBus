@@ -9,6 +9,7 @@ var CSS_VEH_OPACITY = 0.5;
 // Subscribe to 'lists' collection on startup.
 // Select a list once data has arrived.
 var vehiclesHandle = Meteor.subscribe('vehicles', function () {
+  var movedCount = 0;
   var svg = d3.select("svg");
   var projection = d3.geo.albers()
     .center([0, 21.4667])
@@ -23,14 +24,16 @@ var vehiclesHandle = Meteor.subscribe('vehicles', function () {
     //   // console.log(fields);
     // },
     changed: function (id, fields) {
-      console.log('changed vehicles: id: ' + id);
-      console.log(fields);      
+      // console.log('changed vehicles: id: ' + id);
+      // console.log(fields);      
 
       var vehicle = Vehicles.findOne({_id:id});
       if (!_U.existy(vehicle)) return;
+      movedCount += 1;
+      console.log('moving vehicle (so far ' + movedCount + ') ->');
+      console.log(vehicle);
 
       var circle = svg.select("#v"+vehicle.vehicleId);
-      console.log('moving ' + circle.length + ' circles');
       circle
         .style("fill", "green")
         .style("opacity", 1.0)

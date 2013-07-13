@@ -15,7 +15,7 @@ if (_U.existy(builder)) {
 var http = Npm.require('http');
 var Fiber = Npm.require('fibers');
 var GTFS_VEHICLE_BATCH_SIZE = 500;
-var GTFS_VEHICLE_POLL_SECONDS = 10;
+var GTFS_VEHICLE_POLL_SECONDS = 4;
 
 function gtfsRecorder() {
   var offset = 0;
