@@ -48,8 +48,8 @@ updateVehicle = function (options) {
 
   var matchingVehicle = Vehicles.findOne({vehicleId:options.vehicleId});
   if (_U.existy(matchingVehicle)) {
-    if (parseInt(matchingVehicle.latitude) === parseInt(options.latitude) &&
-        parseInt(matchingVehicle.longitude) === parseInt(options.longitude)) return;
+    if (parseFloat(matchingVehicle.latitude) === parseFloat(options.latitude) &&
+        parseFloat(matchingVehicle.longitude) === parseFloat(options.longitude)) return;
 
     return Vehicles.update(
       {vehicleId: options.vehicleId},

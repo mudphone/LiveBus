@@ -51,7 +51,7 @@ var vehiclesHandle = Meteor.subscribe('vehicles', function () {
 var previousData = [];
 
 function previousCoordinates(vehicle) {
-  var vehicle = Vehicles.findOne({vehicleId:vehicle.vehicleId});
+  var vehicle = _.findWhere(previousData, {vehicleId:vehicle.vehicleId});
   if (_U.existy(vehicle)) return {latitude:vehicle.latitude, longitude:vehicle.longitude};
   return undefined;
 }
