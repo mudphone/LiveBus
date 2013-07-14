@@ -90,59 +90,54 @@ Template.map.rendered = function () {
     console.log('Refreshing data...');
     var vehicles = Vehicles.find().fetch();
 
+    var movedVehicles = _.filter(vehicles, hasMoved);
+    var movedVehiclesCount = parseFloat(movedVehicles.length);
+    console.log('movedVehiclesCount: ' + movedVehiclesCount);
+    function moveDelay(d) {
+      if (!hasMoved(d)) return 0;
+      var count = _.max([1, movedVehiclesCount]);
+      var index = _.max([0, _.indexOf(movedVehicles, d)]);
+      var delay = (30000.0 / count) * index; 
+      console.log('delay: ' + delay)
+      return delay; 
+    }
+
     // Data join
     var circles = svg.selectAll("circle.vehicle")
       .data(vehicles, function (vehicle) { return vehicle._id; });
     
     // HALOS
-    var halos = svg.selectAll("circle.halo")
-      .data(vehicles, function (vehicle) { return vehicle._id; });
+    // var halos = svg.selectAll("circle.halo")
+    //   .data(vehicles, function (vehicle) { return vehicle._id; });
 
-    halos
-      .enter()
-        .append("circle")
-          .attr("class", "halo")
-          .attr("stroke", "white")
-          .attr("r", 100)
-          .style("fill-opacity", 0)
-          .style("opacity", 0)
-          .attr("transform", function(d) {return "translate(" + projection([d.longitude,d.latitude]) + ")";});
-    halos
-      .attr("transform", function(d) {
-          var oldCoords = previousCoordinates(d);
-          if (!_U.existy(oldCoords)) oldCoords = d;
-          return "translate(" + projection([oldCoords.longitude,oldCoords.latitude]) + ")";
-        })
-      .style("opacity", function(d) {
-          return hasMoved(d) ? 1 : 0;
-        })
-      .attr("r", 20)
-      .transition()
-        .duration(CSS_VEH_MOVING_DURATION_SEC*1000.0)
-        .attr("transform", function(d) {return "translate(" + projection([d.longitude,d.latitude]) + ")";})
-        .attr("r", 10)
-      .transition()
-        .delay(5000)
-        .duration(2000)
-        .style("opacity", 0);
-
-    // Transition entering/updating vehicles
-    circles
-      .style("fill", function(d) {
-        return hasMoved(d) ? "green" : CSS_VEH_COLOR;
-      })
-      .transition()
-        .duration(CSS_VEH_MOVING_DURATION_SEC*1000.0)
-        .style("opacity", 1)
-        .attr("transform", function(d) {return "translate(" + projection([d.longitude,d.latitude]) + ")";})
-        .attr("r", function(d) {
-          return hasMoved(d) ? CSS_VEH_RADIUS_MOVING : CSS_VEH_RADIUS;
-        })
-      .transition()
-        .duration(2000)
-        .attr("r", CSS_VEH_RADIUS)
-        .style("opacity", CSS_VEH_OPACITY)
-        .style("fill", CSS_VEH_COLOR);
+    // halos
+    //   .enter()
+    //     .append("circle")
+    //       .attr("class", "halo")
+    //       .attr("stroke", "white")
+    //       .attr("r", 100)
+    //       .style("fill-opacity", 0)
+    //       .style("opacity", 0)
+    //       .attr("transform", function(d) {return "translate(" + projection([d.longitude,d.latitude]) + ")";});
+    // halos
+    //   .attr("transform", function(d) {
+    //       var oldCoords = previousCoordinates(d);
+    //       if (!_U.existy(oldCoords)) oldCoords = d;
+    //       return "translate(" + projection([oldCoords.longitude,oldCoords.latitude]) + ")";
+    //     })
+    //   .style("opacity", function(d) {
+    //       return hasMoved(d) ? 1 : 0;
+    //     })
+    //   .attr("r", 20)
+    //   .transition()
+    //     .delay(moveDelay)
+    //     .duration(CSS_VEH_MOVING_DURATION_SEC*1000.0)
+    //     .attr("transform", function(d) {return "translate(" + projection([d.longitude,d.latitude]) + ")";})
+    //     .attr("r", 10)
+    //   .transition()
+    //     // .delay(5000)
+    //     .duration(2000)
+    //     .style("opacity", 0);
 
     // Entering vehicles
     circles
@@ -158,6 +153,20 @@ Template.map.rendered = function () {
           .attr("r", CSS_VEH_RADIUS)
           .style("opacity", CSS_VEH_OPACITY);
 
+    // Transition entering/updating vehicles
+    circles
+      .transition()
+        .delay(moveDelay)
+        .duration(CSS_VEH_MOVING_DURATION_SEC*1000.0)
+        .style("opacity", 1)
+        .attr("transform", function(d) {return "translate(" + projection([d.longitude,d.latitude]) + ")";})
+        .attr("r", function(d) {
+          return hasMoved(d) ? CSS_VEH_RADIUS_MOVING : CSS_VEH_RADIUS;
+        })
+      .transition()
+        .duration(2000)
+        .attr("r", CSS_VEH_RADIUS)
+        .style("opacity", CSS_VEH_OPACITY);
 
     // Exititing vehicles
     circles
