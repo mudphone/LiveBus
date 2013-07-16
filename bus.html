@@ -2,7 +2,6 @@
 <meta charset="utf-8">
 </head>
 <body>
-  {{> hello}}
   {{> page}}
 </body>
 
@@ -14,16 +13,7 @@
   <div class="map">
     {{#constant}}
       <svg width="1600" height="1160">
-        <!-- <circle class="callout" cx=-100 cy=-100></circle> -->
-        <!-- <g class="circles"></g> -->
-        <!-- <g class="labels"></g> -->
       </svg>
     {{/constant}}
   </div>
-</template>
-
-<template name="hello">
-  <h1>Hello World!</h1>
-  {{greeting}}
-  <input type="button" value="Click" />
 </template>
