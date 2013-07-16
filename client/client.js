@@ -13,38 +13,14 @@ var CSS_VEH_COLOR = "white";
 // Subscribe to 'lists' collection on startup.
 // Select a list once data has arrived.
 var vehiclesHandle = Meteor.subscribe('vehicles', function () {
-
-  var handle = Vehicles.find({}).observeChanges({
-    // added: function(id, fields) {
-    //   // console.log('added vehicles: id: ' + id);
-    //   // console.log(fields);
-    // },
-    changed: function (id, fields) {
-      // console.log('changed vehicles: id: ' + id);
-      // console.log(fields);      
-
-      var vehicle = Vehicles.findOne({_id:id});
-      if (!_U.existy(vehicle)) return;
-      // movedCount += 1;
-      console.log('moving vehicle ->');
-      console.log(vehicle);
-      // svg
-      //   .append("circle")
-      //     .attr("class", "halo")
-      //     .attr("stroke", "white")
-      //     .attr("r", 100)
-      //     .style("fill-opacity", 0)
-      //     .attr("transform", function(d) {return "translate(" + projection([fields.longitude,fields.latitude]) + ")";})
-      //     .transition()
-      //       .duration(1000)
-      //       .attr("r", 10)
-      //     .transition()
-      //       .delay(7000)
-      //       .duration(2000)
-      //       .style("opacity", 0)
-      //       .remove();
-    }
-  });
+  // var handle = Vehicles.find({}).observeChanges({
+  //   changed: function (id, fields) {
+  //     var vehicle = Vehicles.findOne({_id:id});
+  //     if (!_U.existy(vehicle)) return;
+  //     console.log('moving vehicle ->');
+  //     console.log(vehicle);
+  //   }
+  // });
 });
 
 
@@ -69,14 +45,6 @@ Template.map.rendered = function () {
   var svg = d3.select("svg");
 
   // Define the projection:
-  // Hawaii: 19.5667° N, 155.5000° W
-  // All of Hawaii's Islands:
-  // var projection = d3.geo.albers()
-  //   .center([0, 20.1])
-  //   .rotate([157.6, 0])
-  //   .parallels([15, 25])
-  //   .scale(15000)
-  //   .translate([width / 2, height / 2]);
 
   // Only O‘ahu:
   var projection = d3.geo.albers()
@@ -105,39 +73,6 @@ Template.map.rendered = function () {
     // Data join
     var circles = svg.selectAll("circle.vehicle")
       .data(vehicles, function (vehicle) { return vehicle._id; });
-    
-    // HALOS
-    // var halos = svg.selectAll("circle.halo")
-    //   .data(vehicles, function (vehicle) { return vehicle._id; });
-
-    // halos
-    //   .enter()
-    //     .append("circle")
-    //       .attr("class", "halo")
-    //       .attr("stroke", "white")
-    //       .attr("r", 100)
-    //       .style("fill-opacity", 0)
-    //       .style("opacity", 0)
-    //       .attr("transform", function(d) {return "translate(" + projection([d.longitude,d.latitude]) + ")";});
-    // halos
-    //   .attr("transform", function(d) {
-    //       var oldCoords = previousCoordinates(d);
-    //       if (!_U.existy(oldCoords)) oldCoords = d;
-    //       return "translate(" + projection([oldCoords.longitude,oldCoords.latitude]) + ")";
-    //     })
-    //   .style("opacity", function(d) {
-    //       return hasMoved(d) ? 1 : 0;
-    //     })
-    //   .attr("r", 20)
-    //   .transition()
-    //     .delay(moveDelay)
-    //     .duration(CSS_VEH_MOVING_DURATION_SEC*1000.0)
-    //     .attr("transform", function(d) {return "translate(" + projection([d.longitude,d.latitude]) + ")";})
-    //     .attr("r", 10)
-    //   .transition()
-    //     // .delay(5000)
-    //     .duration(2000)
-    //     .style("opacity", 0);
 
     // Entering vehicles
     circles
@@ -215,37 +150,11 @@ Template.map.rendered = function () {
       };
 
       var datasets = [
-        // { 
-        //   "data_url": "data/oah_streets_topo.json",
-        //   "feature_class": "streets",
-        //   "color": "white",
-        //   "circa": "2008" },
         { 
           "data_url": "data/bus_topo.json",
           "feature_class": "bus_routes",
           "color": "orange",
           "circa": "2006" }
-          // ,
-        // { 
-        //   "data_url": "data/darstreams_topo.json",
-        //   "feature_class": "rivers",
-        //   "color": "steelblue",
-        //   "circa": "2005" },
-        // { 
-        //   "data_url": "data/sewer_main_topo.json",
-        //   "feature_class": "sewer_main",
-        //   "color": "brown",
-        //   "circa": "2008" },
-        // { 
-        //   "data_url": "data/sewer_lateral_topo.json",
-        //   "feature_class": "sewer_lateral",
-        //   "color": "yellow",
-        //   "circa": "2008" },
-        // { 
-        //   "data_url": "data/sewer_offshore_topo.json",
-        //   "feature_class": "sewer_offshore",
-        //   "color": "red",
-        //   "circa": "2002" }
       ];
 
       var task = function(data_idx) {
