@@ -1,6 +1,6 @@
 # LiveBus
 
-A bit of an experiment
+A bit of an experiment...
 
 ### What is this?
 
